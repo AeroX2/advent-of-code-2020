@@ -8,44 +8,47 @@ lines_raw = data[1].split('\n')
 
 rules = {}
 for line in rules_raw:
-    m = re.match('([0-9]+): (.+)', line)
+    m = re.match('([0-9]+): (.+)', line.strip())
     rules[m.group(1)] = m.group(2)
 
-print(rules)
-    
-def helper(curr_rule):
+visited = {}
+def helper(rule_name):
+    curr_rule = rules[rule_name]
+
     m = re.match(r'"([a-z])"', curr_rule)
     if (m):
         return m.group(1)
+
+    if (rule_name in visited):
+        return visited[rule_name]
+    #visited[rule_name] = '(?P<%s>)' % (chr(int(rule_name)+ord('a')),)
 
     m = re.match(r'(.+) \| (.+)', curr_rule)
     if (m):
         group1 = m.group(1).split(' ')
         group2 = m.group(2).split(' ')
 
-        a = [helper(rules[x]) for x in group1]
-        b = ''.join([helper(rules[x]) for x in group2])
-        return '((%s)|(%s))' % (''.join(a),b)
+        a = [helper(x) for x in group1]
+        if (rule_name == '8'):
+            return '(%s)+' % (a[0],)
+        if (rule_name == '11'):
+            return '(?P<a>(%s)(?&a)?(%s))' % (a[0],a[1])
+
+        b = ''.join([helper(x) for x in group2])
+
+        s = '(%s|%s)' % (''.join(a),b)
+        visited[rule_name] = s
+        return s
 
     group = curr_rule.split(' ')
-    a = ''.join([helper(rules[x]) for x in group])
+    a = ''.join([helper(x) for x in group])
+    visited[rule_name] = a
     return a
 
-single_rule = helper(rules['0'])
+single_rule = helper('0')
 single_rule = '^'+single_rule+'$'
+print(single_rule)
 
-total = 0
-for line in lines_raw:
-    m = re.match(single_rule, line)
-    if (not m):
-        continue
-
-    m = m.group('hack')
-    print('m',m)
-    h = len(m) // 2
-    for i in range(1,h):
-        print(m[h-i:h+i])
-        if (re.match("^%s+$" % (m[h-i:h+i],), m)):
-            print("Matched",m,m[h-i:h+i])
-print(total)
+import regex as reg
+print(sum([1 for line in lines_raw if reg.match(single_rule, line)]))
 

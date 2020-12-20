@@ -24,7 +24,7 @@ def helper(curr_rule):
         group2 = m.group(2).split(' ')
         a = ''.join([helper(rules[x]) for x in group1])
         b = ''.join([helper(rules[x]) for x in group2])
-        return '((%s)|(%s))' % (a,b)
+        return '(%s|%s)' % (a,b)
 
     group = curr_rule.split(' ')
     a = ''.join([helper(rules[x]) for x in group])
